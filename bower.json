@@ -1,0 +1,10 @@
+{
+  "name": "curvefever",
+  "version": "0.0.1",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "jquery": "2.0.x",
+    "victor": "^1.1.0"
+  }
+}
