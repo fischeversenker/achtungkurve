@@ -1,88 +1,486 @@
-function gameBootstrap(conf) {
+(function bootstrap() {
+	"use strict";
+	/**
+	 * @name Game
+	 * @property {Array.<Module>} 			Game.modules
+	 * @property {Array.<Entity>} 			Game.classes
+	 * @property {function(Object)} 		Game.init
+	 * @property {function(name, classObj)} Game.register
+	 */
 
-  var config = {
-    player: [],
+	/** @type {Game|*} */
+	var Game = {
+		modules: [],
+		classes: {}
+	};
+	/**
+	 * @name Config
+	 * @property {Array.<Player>} 	Config.player
+	 * @property {Array.<Modules>} 	Config.modules
+	 * @property {number} 			Config.width
+	 * @property {number} 			Config.height
+	 * @property {boolean} 			Config.inMatch
+	 */
 
-  }
+	/** @typeof {Config} */
+	var config;
 
-  $.extend(config, conf);
 
-  function start() {
-    if(config.player.length >= 2) {
-      for(var i = 0; i < config.player.length; i++) {
-        var $playerDom = $('<canvas/>', {id: "canvas-"+config.player[i].id})
-                        .prop({
-                              width: window.innerWidth,
-                              height: window.innerHeight
-                          })
-                         .appendTo(config.dom);
-        var ctx = $playerDom[0].getContext("2d");
-        ctx.clearRect(0, 0, $playerDom.width, $playerDom.height);
-        config.player[i].$playerDom = $playerDom;
-        config.player[i].ctx = ctx;
-        config.player[i].direction = new Victor(Math.random(), Math.random()).norm();
-        config.player[i].position = new Victor( Math.random() * $(window).width(), Math.random() * $(window).height());
-        config.player[i].moveIntent = 0;
-        config.player[i].dead = false;
-        config.player[i].angle = 1;
-        bindInputForPlayer(config.player[i]);
-      }
+	var mods = [],	//loaded mods
+		partyCheck = null,
+		lastUpdate = Date.now(),
+		deltaTime = 0,
+		activeEntities = [];
 
-      gameLoop();
-    }
-  }
+	var	defaultConfig = {
+		player: [],
+		modules: [
+			"Overlay",
+			"DatGui"
+		],
+		width: window.innerWidth,
+		height: window.innerHeight,
+		inMatch: false,
+		pickups: [],
+		startGameTime: 2000,
+	};
 
-  function bindInputForPlayer(player) {
-    $(window).on('keydown', function(e) {
-      switch(e.which) {
-        case player.inputs.left:
-          player.moveIntent = 1;
-          break;
-        case player.inputs.right:
-          player.moveIntent = -1;
-          break;
-      }
-    });
-    $(window).on('keyup', function(e) {
-      if(e.which == player.inputs.left || e.which == player.inputs.right) player.moveIntent = 0;
-    });
-  }
+	window.Game = Game;
+	var Events = {
+		listeners: {
+			onGameInit: [],
+			onRoundStart: [],
+			onRoundEnd: [],
+			onTick: [],
+			onPostTick: [],
+			onPlayerDied: []
+		},
+		bindEntity: function (entity) {
+			var methods = Object.getOwnPropertyNames(entity.__proto__);
+			for(var i = 0; i < methods.length; i++) {
+				if (methods[i] in this.listeners && methods[i] != "constructor") {
+					this.listeners[methods[i]].push(entity);
+				}
+			}
+		},
+		unbindEntity: function(entity) {
+			//@todo implement unbindEntity
+		},
+		fire: function(type, ...args) {
+			if (!(type in this.listeners)) return;
+			for(var i = 0; i < this.listeners[type].length; i++) {
+				this.listeners[type][i][type].call(this.listeners[type][i], ...args);
+			}
+		}
+	};
+	/**
+	 * Game.init
+	 * @param conf
+	 * @returns {boolean}
+	 */
+	Game.init = function (conf) {
+		// Events.bind("onTick", {
+		// 	onTick: function() {
+		// 		console.log("call back!");
+		// 	}
+		// });
+		config = $.extend({} ,defaultConfig, conf);
+		if (config.player.length < 2) {
+			console.error("I need at least 2 players'");
+			return false;
+		}
 
-  function gameLoop() {
-    window.requestAnimationFrame(gameLoop);
-    for(var i = 0; i < config.player.length && !config.player[i].dead; i++) {
-      var p = config.player[i];
-      p.direction = rotate(0, 0, p.direction.x, p.direction.y, p.moveIntent * p.angle);
-      p.position.add(p.direction);
-      drawPlayer(p);
-    }
-    for(var i = 0; i < config.player.length; i++) {
-      config.player[i].dead = checkCollision(config.player[i]);
-    }
-  }
+		//create underlay canvas
+		var $underlay = $('<canvas/>', {id: "canvas-underlay"})
+			.prop({
+				width: window.innerWidth,
+				height: window.innerHeight,
+				style: "z-index: -10"
+			})
+			.appendTo(config.dom);
+		config.underlayCtx = $underlay[0].getContext("2d");
 
-  function drawPlayer(player) {
-    player.ctx.fillStyle = player.color;
-    player.ctx.fillRect(player.position.x, player.position.y, 5, 5);
-  }
+		this.$playerDom = $('<canvas/>', {id: "canvas-player"})
+			.prop({
+				width: window.innerWidth,
+				height: window.innerHeight
+			})
+			.appendTo(config.dom);
+		config.ctx = this.$playerDom[0].getContext("2d");
 
-  function rotate(cx, cy, x, y, angle) {
-    var radians = (Math.PI / 180) * angle,
-        cos = Math.cos(radians),
-        sin = Math.sin(radians),
-        nx = (cos * (x - cx)) + (sin * (y - cy)) + cx,
-        ny = (cos * (y - cy)) - (sin * (x - cx)) + cy;
-    return new Victor(nx, ny);
-  }
+		//player init
+		var players = [];
+		for (var i = 0; i < config.player.length; i++) {
+			players.push( new Player(config.player[i]) );
+		}
+		config.player = players;
 
-  function checkCollision(player) {
-    for(var i = 0; i < config.player.length; i++) {
-      var imgd = config.player[i].ctx.getImageData(player.position.x, player.position.y, 1, 1);
-      if(imgd.data[3] != 0) return true;
-    }
-    return false;
-  }
+		//module init
+		for (var i = 0; i < config.modules.length; i++) {
+			var mod = new Game.modules[config.modules[i]]();
+			Game.activateEntity(mod);
+			mods.push(mod);
+		}
 
-  start();
+		for(let i = 0; i < config.player.length; i++) {
+			Game.activateEntity(config.player[i]);
+		}
+		gameLoop();
+		Events.fire("onGameInit");
+		startRound();
+	};
+	/**
+	 * @param {string} 			name
+	 * @param {object} 			classObj
+	 * @param {Array.<string>} 	dependencies
+	 */
+	Game.register = function (name, classObj, dependencies = []) {
+		//@todo save dependencies
+		Game.modules[name] = classObj;
+	};
+	Game.create = function (name, classObj, dependencies = []) {
+		//@todo save dependencies
+		Game.modules[name] = classObj;
+	};
+	/**
+	 * @param {Entity} entity
+	 */
+	Game.activateEntity = function(entity) {
+		Events.bindEntity(entity);
+		activeEntities.push(entity);
+	};
+	/**
+	 * @param {Entity} entity
+	 */
+	var needDeactivation = [];
+	Game.deActivateEntity = function(entity) {
+		needDeactivation.push(entity);
+	};
 
-}
+	function clearField() {
+		config.ctx.clearRect(0, 0, config.width, config.height);
+		//@todo remove pickups
+		//@todo call clear event (so that modules can clear something)
+	}
+	function startRound() {
+		checkParty(function() {
+			clearField();
+			setTimeout(function() {
+				config.inMatch = true;
+				Events.fire("onRoundStart");
+			}, config.startGameTime);
+
+			Game.activateEntity(new Game.modules["SpeedBoostPickup"](new Victor(150, 350)));
+
+		});
+	}
+	function gameLoop() {
+		window.requestAnimationFrame(gameLoop);
+		var now = Date.now();
+		deltaTime = now - lastUpdate;
+		lastUpdate = now;
+
+		Events.fire("onTick", deltaTime);
+		config.underlayCtx.clearRect(0, 0, config.width, config.height);
+
+		for(var i = 0; i < activeEntities.length; i++) {
+			activeEntities[i].tick.call(activeEntities[i], deltaTime);
+			activeEntities[i].draw.call(activeEntities[i]);
+		}
+		//check palyer collision
+		for(let i = 0; i < config.player.length; i++) {
+			if (config.player[i].dead) continue;
+			if(checkCollision(config.player[i])) {
+				killPlayer(config.player[i]);
+			}
+		}
+		Events.fire("onPostTick");
+
+		if(needDeactivation.length > 0) {
+			for(let i = 0; i < needDeactivation.length; i++) {
+				Events.unbindEntity(needDeactivation[i]);
+				let index = activeEntities.indexOf(needDeactivation[i]);
+				if (index > -1) {
+					activeEntities.splice(index, 1);
+				}
+			}
+			needDeactivation = [];
+		}
+		if (partyCheck != null) partyCheck.call();
+	}
+	/**
+	 *
+	 * @param {Player} player
+	 */
+	function killPlayer(player) {
+		player.dead = true;
+		//update match score
+		var deadCount = 0;
+		for (var i = 0; i < config.player.length; i++) {
+			if (!config.player[i].dead) {
+				config.player[i].points += 1;
+			} else {
+				deadCount++;
+			}
+		}
+		Events.fire("onPlayerDied", player);
+		if (deadCount >= config.player.length - 1) {
+			config.inMatch = false;
+			Events.fire("onRoundEnd");
+			startRound();
+		}
+	}
+	function checkParty(callBack) {
+		if (partyCheck != null) return false;
+		//check for all special keys
+		partyCheck = function() {
+			var sum = 0;
+			for (var i = 0; i < config.player.length; i++) {
+				sum += (config.player[i].specialIntent) ? 1 : 0;
+			}
+			if (sum + 1 >= config.player.length) {
+				partyCheck = null;
+				callBack.call();
+			}
+		};
+	}
+	/**
+	 * @param {Player} player
+	 * @returns {boolean} true if there is a collision
+	 */
+	function checkCollision(player) {
+		var checkPoint = player.direction.clone().add(player.position);
+		var imgd = config.ctx.getImageData(Math.round(checkPoint.x), Math.round(checkPoint.y), 1, 1);
+		if (imgd.data[3] != 0) return true;
+
+		return false;
+	}
+
+	/***********************
+	* External Api Classes *
+	***********************/
+
+	/**
+	 * Base game Entity
+	 * @name Entity
+	 * @property {boolean} 		Entity._alive
+	 * @property {Victor} 		Entity.position
+	 * @property {function()} 	Entity.getConfig
+	 * @property {function()} 	Entity.dispose
+	 */
+	class Entity {
+		/**
+		 * @param {Victor} position
+		 */
+		constructor(position) {
+			this._alive = true;
+			this.position = position || new Victor(-100, -100);
+		}
+		dispose() {
+			this._alive = false;
+			Events.unbindEntity(this);
+			Game.deActivateEntity(this);
+		}
+		/**
+		 * @returns {Config}
+		 */
+		getConfig() {
+			return config;
+		}
+		tick(delta) {}
+		draw() {}
+	}
+	/**
+	 * Base Module
+	 */
+	class Module extends Entity {
+		constructor(position) {
+			super(position);
+		}
+	}
+	Game.classes.Module = Module;
+	/**
+	 * @name 	 Player
+	 * @property {jQuery} 			Player.$playerDom
+	 * @property {Victor} 			Player.ctx
+	 * @property {Victor} 			Player.direction
+	 * @property {number} 			Player.moveIntent
+	 * @property {number} 			Player.steerForce
+	 * @property {number} 			Player.size
+	 * @property {number} 			Player.speed
+	 * @property {boolean} 			Player.dead
+	 * @property {number} 			Player.id
+	 * @property {string} 			Player.name
+	 * @property {string} 			Player.color
+	 * @property {object} 			Player.inputs
+	 * @property {Array.<Mutator>} 	Player.activeMutator
+	 */
+	class Player extends Entity {
+		constructor(conf) {
+			super(conf.position || new Victor(Math.random() * 400, Math.random() * 400));
+			this.ctx = config.ctx;
+			this.direction = new Victor(1, 1);
+			this.steerForce = 50;
+			this.size = 2;
+			this.speed = 1;
+			this.dead = false;
+			this.points = 0;
+			this.id = conf.id || Math.round(Math.random() * 9999) + 1000;
+			this.name = conf.name || (Math.round(Math.random() * 999999) + 1000000).toString(16);
+			this.color = conf.color;
+			this.inputs = conf.inputs;
+			this.activeMutator = [];
+			this.moveIntent = 0;
+			this.specialIntent = false;
+			this.bindInputs(conf);
+		}
+		onRoundStart() {
+			this.dead = false;
+		}
+		onRoundEnd() {
+			this.dead = true;
+			this.clearPickups();
+		}
+		onPlayerDied(player) {
+			if (player === this) {
+				this.clearPickups();
+			}
+		}
+		clearPickups() {
+			var mutatorBack = this.activeMutator.slice();
+			for (var i = 0; i < mutatorBack.length; i++) {
+				mutatorBack[i].dispose();
+			}
+		}
+		bindInputs() {
+			var player = this;
+			$(window).on('keydown', function (e) {
+				switch (e.which) {
+					case player.inputs.left:
+						player.moveIntent = 1;
+						break;
+					case player.inputs.right:
+						player.moveIntent = -1;
+						break;
+					case player.inputs.special:
+						player.specialIntent = true;
+						break;
+				}
+			});
+			$(window).on('keyup', function (e) {
+				if (e.which == player.inputs.left || e.which == player.inputs.right) player.moveIntent = 0;
+				if (e.which == player.inputs.special) player.specialIntent = false;
+			});
+		}
+		special() {
+
+		}
+		addMutator(mutator) {
+			this.activeMutator.push(mutator);
+		}
+		removeMutator(mutator) {
+			var index = this.activeMutator.indexOf(mutator);
+			if (index > -1) {
+				this.activeMutator.splice(index, 1);
+			}
+		}
+		tick(delta) {
+			if (this.dead) return;
+			this.direction.rotateDeg(this.moveIntent * this.steerForce * this.speed / delta);
+			this.position.add(this.direction.clone().multiplyScalar(this.speed));
+			//check field outs'
+			if (this.position.x < 0) {
+				this.position.x += config.width;
+			} else if(this.position.x > config.width) {
+				this.position.x -= config.width;
+			}
+			if (this.position.y < 0) {
+				this.position.y += config.height;
+			} else if(this.position.x > config.height) {
+				this.position.y -= config.height;
+			}
+		}
+		draw() {
+			if (this.dead) return;
+			//draw on the player's canvas
+			this.ctx.fillStyle = this.color;
+			var radius 	= new Victor(this.size, this.size),
+				center 	= this.position.clone().add(this.direction.clone().invert()),
+				left  	= this.direction.clone().multiply(radius).rotateDeg(90).add(center),
+				right 	= this.direction.clone().multiply(radius).rotateDeg(-90).add(center);
+
+			this.ctx.strokeStyle = this.color;
+			this.ctx.beginPath();
+			this.ctx.moveTo(left.x, left.y);
+			this.ctx.lineTo(right.x, right.y);
+			this.ctx.stroke();
+			this.ctx.closePath();
+
+			// this.ctx.arc(center.x, center.y, this.size, 0, 2 * Math.PI);
+			// this.ctx.fill();
+			// this.ctx.closePath();
+		}
+	}
+
+
+	/**
+	 * @name Mutator
+	 *
+	 */
+	class Mutator extends Entity {
+		constructor(position) {
+			super(position);
+			this.owner = null;
+			this.maxDuration = 3000;
+			this.duration = 0;
+		}
+		dispose() {
+			this.owner.removeMutator(this);
+			super.dispose();
+		}
+	}
+	Game.classes.Mutator = Mutator;
+	/**
+	 * @name Pickup
+	 * @property {Player} 	Pickup.owner
+	 * @property {number} 	Pickup.radius
+	 * @property {number} 	Pickup.maxDuration
+	 * @property {number} 	Pickup.duration
+	 */
+	class Pickup extends Mutator {
+		constructor(position) {
+			super(position);
+			var conf = super.getConfig();
+			this.ctx = conf.underlayCtx;
+			this.radius = 20;
+		}
+		tick(delta) {
+			if (this.owner === null) {
+				var p = this.checkCollision();
+				if (p != false) {
+					this.owner = p;
+					this.owner.addMutator(this);
+					if ("pickedUp" in this) this.pickedUp(this.owner);
+				}
+			}
+		}
+		draw() {
+			if(this.owner == null) {
+				this.ctx.beginPath();
+				this.ctx.fillStyle = "yellow";
+				this.ctx.arc(this.position.x, this.position.y, 30, 0, 2 * Math.PI);
+				this.ctx.fill();
+			}
+		}
+		checkCollision() {
+			for (var i = 0; i < config.player.length; i++) {
+				var distance = config.player[i].position.distance(this.position);
+				if (distance < this.radius) {
+					return config.player[i];
+				}
+			}
+			return false;
+		}
+	}
+	Game.classes.Pickup = Pickup;
+})();

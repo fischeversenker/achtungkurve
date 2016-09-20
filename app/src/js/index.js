@@ -6,34 +6,33 @@ $(function(){
     var game;
 
     function init() {
-
-
       $('#start-game-btn').click(function(e){
-        console.log("starting");
         $gameConfig.hide();
 
         var config = {
           player: [{
             id: 0,
             name: "stefan",
-            color: "red",
-            inputs: {
-              left: 37,
-              right: 39,
+            color: "red",//!
+            inputs: {//!
+              left: 39,
+              special: 40,
+              right: 37
             }
           }, {
             id: 1,
             name: "felix",
-            color: "blue",
-            inputs: {
-              left: 65,
-              right: 68,
+            color: "blue",//!
+            inputs: {//!
+              left: 68,
+              special: 83,
+              right: 65
             }
           }],
-          dom: $gameCanvas,
+          dom: $gameCanvas
         };
         $gameCanvas.show();
-        game = gameBootstrap(config);
+        game = Game.init(config);
 
       });
 
@@ -43,20 +42,6 @@ $(function(){
       init: init,
     }
   }
-
-
-
-  // config game
-    // anzahl user und tasten festlegen
-
-  // game-init bei "Start"-Klick
-
-  // loop game
-    // update players' pos
-    // check collision
-    //
-
-
 apppp = app();
 apppp.init();
 
