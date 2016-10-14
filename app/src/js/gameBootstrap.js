@@ -36,7 +36,8 @@
 		player: [],
 		modules: [
 			"Overlay",
-			"DatGui"
+			"DatGui",
+			"GamePlay"
 		],
 		width: window.innerWidth,
 		height: window.innerHeight,
@@ -163,14 +164,15 @@
 		//@todo call clear event (so that modules can clear something)
 	}
 	function startRound() {
+		console.log("startRound, firing after " + (config.startGameTime/1000) + "s");
 		checkParty(function() {
 			clearField();
-			setTimeout(function() {
+			window.setTimeout(function() {
+				console.log("fire(startRound)");
 				config.inMatch = true;
 				Events.fire("onRoundStart");
 			}, config.startGameTime);
 
-			Game.activateEntity(new Game.modules["SpeedBoostPickup"](new Victor(150, 350)));
 
 		});
 	}
@@ -206,7 +208,7 @@
 			}
 			needDeactivation = [];
 		}
-		if (partyCheck != null) partyCheck.call();
+		if (!Game.inMatch && partyCheck != null) partyCheck.call();
 	}
 	/**
 	 *
