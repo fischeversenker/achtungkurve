@@ -14,7 +14,7 @@
 		classes: {}
 	};
 	/**
-	 * @name Config
+	 * @name config
 	 * @property {Array.<Player>} 	Config.player
 	 * @property {Array.<Modules>} 	Config.modules
 	 * @property {number} 			Config.width
@@ -22,7 +22,7 @@
 	 * @property {boolean} 			Config.inMatch
 	 */
 
-	/** @typeof {Config} */
+	/** @typeof {config} */
 	var config;
 
 
@@ -80,12 +80,8 @@
 	 * @returns {boolean}
 	 */
 	Game.init = function (conf) {
-		// Events.bind("onTick", {
-		// 	onTick: function() {
-		// 		console.log("call back!");
-		// 	}
-		// });
 		config = $.extend({} ,defaultConfig, conf);
+
 		if (config.player.length < 2) {
 			console.error("I need at least 2 players'");
 			return false;
@@ -118,12 +114,17 @@
 
 		//module init
 		for (var i = 0; i < config.modules.length; i++) {
-			var mod = new Game.modules[config.modules[i]]();
-			Game.activateEntity(mod);
-			mods.push(mod);
+			try {
+				var mod = new Game.modules[config.modules[i]]();
+				Game.activateEntity(mod);
+				mods.push(mod);
+			} catch (e) {
+				console.error("can't instantiate module: " + config.modules[i] + " -> is the module js included in the HTML?");
+			}
 		}
 
 		for(let i = 0; i < config.player.length; i++) {
+			config.player[i].dead = true;
 			Game.activateEntity(config.player[i]);
 		}
 		gameLoop();
@@ -161,20 +162,44 @@
 	function clearField() {
 		config.ctx.clearRect(0, 0, config.width, config.height);
 		//@todo remove pickups
-		//@todo call clear event (so that modules can clear something)
+		//@todo call clear event (so that modules can also clear something)
 	}
 	function startRound() {
-		console.log("startRound, firing after " + (config.startGameTime/1000) + "s");
 		checkParty(function() {
-			clearField();
-			window.setTimeout(function() {
-				console.log("fire(startRound)");
-				config.inMatch = true;
-				Events.fire("onRoundStart");
-			}, config.startGameTime);
-
-
+			// window.setTimeout(function() {
+				clearField();
+				startCountDown(3000, function() {
+					config.inMatch = true;
+					Events.fire("onRoundStart");
+				});
+			// }, config.startGameTime);
 		});
+	}
+	function checkParty(fn) {
+		if (partyCheck != null) return false;
+		//check for all special keys
+		partyCheck = function() {
+			var sum = 0;
+			for (var i = 0; i < config.player.length; i++) {
+				sum += (config.player[i].specialIntent) ? 1 : 0;
+			}
+			if (sum >= config.player.length) {
+				partyCheck = null;
+				fn.call();
+			}
+		};
+	}
+	function startCountDown(time, fn) {
+		//@todo ? create new countDown entity
+		var count = 0;
+		var a = setInterval(function() {
+			count += time / 3;
+			console.log(count);
+		}, time / 3);
+		setTimeout(function() {
+			clearInterval(a);
+			fn.call();
+		}, time + 1);
 	}
 	function gameLoop() {
 		window.requestAnimationFrame(gameLoop);
@@ -182,12 +207,12 @@
 		deltaTime = now - lastUpdate;
 		lastUpdate = now;
 
-		Events.fire("onTick", deltaTime);
 		config.underlayCtx.clearRect(0, 0, config.width, config.height);
+		Events.fire("onTick", deltaTime);
 
 		for(var i = 0; i < activeEntities.length; i++) {
 			activeEntities[i].tick.call(activeEntities[i], deltaTime);
-			activeEntities[i].draw.call(activeEntities[i]);
+			activeEntities[i].draw.call(activeEntities[i], deltaTime);
 		}
 		//check palyer collision
 		for(let i = 0; i < config.player.length; i++) {
@@ -208,7 +233,7 @@
 			}
 			needDeactivation = [];
 		}
-		if (!Game.inMatch && partyCheck != null) partyCheck.call();
+		if (!config.inMatch && partyCheck != null) partyCheck.call(null, deltaTime);
 	}
 	/**
 	 *
@@ -231,20 +256,6 @@
 			Events.fire("onRoundEnd");
 			startRound();
 		}
-	}
-	function checkParty(callBack) {
-		if (partyCheck != null) return false;
-		//check for all special keys
-		partyCheck = function() {
-			var sum = 0;
-			for (var i = 0; i < config.player.length; i++) {
-				sum += (config.player[i].specialIntent) ? 1 : 0;
-			}
-			if (sum + 1 >= config.player.length) {
-				partyCheck = null;
-				callBack.call();
-			}
-		};
 	}
 	/**
 	 * @param {Player} player

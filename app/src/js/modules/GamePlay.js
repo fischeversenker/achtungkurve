@@ -7,7 +7,6 @@
 	class GamePlay extends Game.classes.Module {
 		constructor() {
 			super();
-			Game.e
 			this.config = super.getConfig();
 			this.doPartyCheck = false;
 
@@ -18,7 +17,6 @@
 			//startRound
 		};
 		onRoundStart() {
-			console.log("GamePlay.onRoundStart");
 			Game.activateEntity(new Game.modules["SpeedBoostPickup"](new Victor(150, 350)));
 		};
 		onPlayerDied(player) {
