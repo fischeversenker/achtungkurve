@@ -54,7 +54,9 @@
 			onRoundEnd: [],
 			onTick: [],
 			onPostTick: [],
-			onPlayerDied: []
+			onPlayerDied: [],
+			onPartyCheck: [],
+			onPartyReady: [],
 		},
 		bindEntity: function (entity) {
 			var methods = Object.getOwnPropertyNames(entity.__proto__);
@@ -168,7 +170,7 @@
 		checkParty(function() {
 			// window.setTimeout(function() {
 				clearField();
-				startCountDown(3000, function() {
+				startCountDown(2250, function() {
 					config.inMatch = true;
 					Events.fire("onRoundStart");
 				});
@@ -176,6 +178,7 @@
 		});
 	}
 	function checkParty(fn) {
+		Events.fire("onPartyCheck");
 		if (partyCheck != null) return false;
 		//check for all special keys
 		partyCheck = function() {
@@ -185,16 +188,15 @@
 			}
 			if (sum >= config.player.length) {
 				partyCheck = null;
-				fn.call();
+				Events.fire("onPartyReady");
+				if (typeof fn === "function") fn.call();
 			}
 		};
 	}
 	function startCountDown(time, fn) {
-		//@todo ? create new countDown entity
 		var count = 0;
 		var a = setInterval(function() {
 			count += time / 3;
-			console.log(count);
 		}, time / 3);
 		setTimeout(function() {
 			clearInterval(a);
