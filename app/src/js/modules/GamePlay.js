@@ -17,7 +17,7 @@
 			//startRound
 		};
 		onRoundStart() {
-			Game.activateEntity(new Game.modules["SpeedBoostPickup"](new Victor(150, 350)));
+			Game.activateEntity(new Game.modules["SpeedBoostSpecialPickup"](new Victor(150, 350)));
 		};
 		onPlayerDied(player) {
 			//set points

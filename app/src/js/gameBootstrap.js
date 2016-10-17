@@ -388,7 +388,7 @@
 			});
 		}
 		special() {
-
+			this.specialIntent = true;
 		}
 		addMutator(mutator) {
 			this.activeMutator.push(mutator);

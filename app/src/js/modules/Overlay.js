@@ -15,44 +15,52 @@
 				})
 				.appendTo(conf.dom);
 			this.overlayCtx = $overlay[0].getContext("2d");
-			this.msg;
+			this.msg = null;
 		}
 		onGameInit() {
 
 		}
 		onPartyCheck() {
 			//show text  "Press Special Key"
-			console.log("dsa");
-			this.msg = new CanvasText.Text("3", 30, this.overlayCtx, new Victor(200, 200), 0);
+			this.msg = new CanvasText.Text("Press Special Key", 30, this.overlayCtx, new Victor(200, 200), 0);
+			this.msg.setActive();
+			var a = new CanvasText.animations.Pulsate(5);
+			a.attach(this.msg);
 		}
 		onPartyReady() {
 			//show countdown
+			this.msg.setActive(false);
 			this.msg = null;
 			var ctx = this.overlayCtx;
 			var text = new CanvasText.Text("3", 30, ctx, new Victor(200, 200), 0);
-			CanvasText.animations.fadeOut(text, 750, function() {
-				var text = new CanvasText.Text("2", 30, ctx, new Victor(200, 200), 0);
-				CanvasText.animations.fadeOut(text, 750, function() {
-					var text = new CanvasText.Text("1", 30, ctx, new Victor(200, 200), 0);
-					CanvasText.animations.fadeOut(text, 750, function() {
-						var text = new CanvasText.Text("GO!", 30, ctx, new Victor(200, 200), 0);
-						CanvasText.animations.fadeOut(text, 500, function() {
-							console.log('end');
-						});
-						CanvasText.animations.fadeSize(text, 80, 500);
-					});
-					CanvasText.animations.fadeSize(text, 80, 750);
-				});
-				CanvasText.animations.fadeSize(text, 80, 750);
-			});
-			CanvasText.animations.fadeSize(text, 80, 750);
+				text.alpha = 1;
+				text.size = 60;
+			text.setActive();
+			text.attach(new CanvasText.animations.FadeOut(750, function() {
+				text.text = "2";
+				text.alpha = 1;
+				text.size = 60;
+				text.attach(new CanvasText.animations.FadeOut(750, function() {
+					text.text = "1";
+					text.alpha = 1;
+					text.size = 60;
+					text.attach(new CanvasText.animations.FadeOut(750, function() {
+						text.text = "GO!";
+						text.alpha = 1;
+						text.size = 20;
+						text.attach(new CanvasText.animations.FadeOut(750));
+						text.attach(new CanvasText.animations.FadeSize(120, 750));
+					}));
+					text.attach(new CanvasText.animations.FadeSize(20, 750));
+				}));
+				text.attach(new CanvasText.animations.FadeSize(20, 750));
+			}));
+			text.attach(new CanvasText.animations.FadeSize(20, 750));
 		}
 		onRoundStart() {
 
 		}
 		onPostTick() {
-			if (this.msg && "draw" in this.msg) this.msg.draw();
-
 			var conf = super.getConfig();
 			this.overlayCtx.save();
 			this.overlayCtx.restore();
