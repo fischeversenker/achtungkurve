@@ -1,0 +1,3 @@
+[submodule "app/src/js/libs/data.gui"]
+	path = app/src/js/libs/data.gui
+	url = https://github.com/salt42/data.gui
