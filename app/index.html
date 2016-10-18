@@ -3,14 +3,16 @@
     <head>
         <meta charset="UTF-8">
         <title>CurveFever</title>
+        <link rel="stylesheet" href="src/js/libs/data.gui/data.gui.css">
         <script src="bower_components/jquery/jquery.js"></script>
         <script src="bower_components/victor/build/victor.js"></script>
-        <script src="bower_components/dat-gui/build/dat.gui.js"></script>
+        <!--<script src="bower_components/dat-gui/build/dat.gui.js"></script>-->
         <script src="src/js/libs/CanvasText.js"></script>
+        <script src="src/js/libs/data.gui/Data.Gui.js"></script>
         <script src="src/js/gameBootstrap.js"></script>
         <script src="src/js/modules/GamePlay.js"></script>
         <script src="src/js/modules/Overlay.js"></script>
-        <script src="src/js/modules/DatGui.js"></script>
+        <script src="src/js/modules/DataGui.js"></script>
         <script src="src/js/pickups/SpeedBoost.js"></script>
         <script src="src/js/pickups/SpeedBoostSpecial.js"></script>
         <script src="src/js/index.js"></script>
@@ -21,6 +23,24 @@
           * {
             padding: 0;
             margin: 0;
+          }
+          .DataGui.centered {
+              right: calc(50% - 125px);
+          }
+          .DataGui .content .left,
+          .DataGui .content .special,
+          .DataGui .content .right {
+              width:40px;
+              float:right;
+              padding-right: 10px;
+              cursor: pointer;
+          }
+          .DataGui .start-game {
+              text-align: center;
+              cursor: pointer;
+          }
+          .DataGui .content.editing {
+              background-color: #1ed36f;
           }
           #canvas-wrapper {
             border: 1px solid black;

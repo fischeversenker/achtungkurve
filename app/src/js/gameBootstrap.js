@@ -36,7 +36,7 @@
 		player: [],
 		modules: [
 			"Overlay",
-			"DatGui",
+			"DataGui",
 			"GamePlay"
 		],
 		width: window.innerWidth,
@@ -121,7 +121,9 @@
 				Game.activateEntity(mod);
 				mods.push(mod);
 			} catch (e) {
-				console.error("can't instantiate module: " + config.modules[i] + " -> is the module js included in the HTML?");
+				console.log(Game.modules[config.modules[i]]);
+				console.error(e);
+				console.error("can't instantiate module: '" + config.modules[i] + "' -> is the module js included in the HTML?");
 			}
 		}
 

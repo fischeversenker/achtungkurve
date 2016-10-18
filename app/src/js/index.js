@@ -33,9 +33,7 @@ $(function(){
         };
         $gameCanvas.show();
         game = Game.init(config);
-
       });
-
     };
 
     return {
