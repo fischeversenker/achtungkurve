@@ -18,9 +18,7 @@
 		for(let i = 0; i < drawables.length; i++) {
 			drawables[i].draw(deltaTime);
 		}
-		while(cleanup()) {
-			console.log('kill');
-		}
+		while(cleanup()) {}
 		if (drawables.length === 0) run = false;
 	}
 	function cleanup() {

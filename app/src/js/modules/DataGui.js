@@ -8,7 +8,7 @@
 		$gui = $("<div></div>").appendTo('body');
 		$gui.addClass('centered');
 		gui = dataGui.create($gui[0]);
-		playersGui = gui.add("PlayerConfig", "Player")
+		playersGui = gui.add("PlayerConfig", "Player");
 		gui.updateAll();
 	});
 	function bootGame(players) {
@@ -21,8 +21,8 @@
 		Game.init(config);
 	}
 	class PlayerConfig extends dataGui.nodeTypes.Node {
-		constructor(parentDom, name) {
-			super();
+		constructor(parent, name) {
+			super(parent);
 			this._leaf = true;
 			this._editing = -1;
 			this.name = "Players";
@@ -114,7 +114,11 @@
 				self.setPlayer($(this).data("id"))
 			});
 			$(".start-game", this._dom).on("click", function(e) {
-				bootGame(self.players);
+				$($gui).animate({
+					right: 10
+				}, 1000, function() {
+					bootGame(self.players);
+				});
 			});
 		}
 	}
@@ -194,7 +198,8 @@
 		onGameInit() {
 			var conf = super.getConfig();
 			this.playersGui.remove();
-			this.pointsGui = new DatGuiFolderWrapper("POINTS");
+			// this.pointsGui = new DatGuiFolderWrapper("POINTS");
+			this.pointsGui = gui.add("Folder", "Points");
 			for (var i = 0; i < conf.player.length; i++) {
 				var player = conf.player[i];
 				//player name
@@ -203,7 +208,6 @@
 				this.datGuiPointControllers.push(this.pointsGui.add("Value", player.name, this.nameMaping, player.name));
 				//player alive or dad
 			}
-			this.pointsGui.open();
 		}
 		updatePoints() {
 			var conf = super.getConfig();
@@ -211,7 +215,7 @@
 				this.nameMaping[conf.player[i].name] = conf.player[i].points;
 			}
 			for (var i = 0; i < this.datGuiPointControllers.length; i++) {
-				this.datGuiPointControllers[i].updateDisplay();
+				this.datGuiPointControllers[i].update();
 			}
 		}
 		onPlayerDied(player) {
