@@ -411,7 +411,6 @@
 		/**  mutable interface  **/
 		addMutator(mutator) {
 			var index = this.activeMutator.push(mutator) - 1;
-			console.log("mutate index " + index);
 			if (index === 0 && mutator.mutatorType === "default"){
 				mutator.mutate();
 				console.log("mutate");

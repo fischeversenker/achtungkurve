@@ -68,7 +68,7 @@
 			this.overlayCtx.clearRect(0, 0, conf.width, conf.height);
 			// draw player overlays
 			this.overlayCtx.beginPath();
-			for(var i = 0; i < conf.player.length; i++) {
+			for(let i = 0; i < conf.player.length; i++) {
 				this.overlayCtx.beginPath();
 				var player = conf.player[i];
 				this.overlayCtx.fillStyle = (conf.player[i].dead)? "red" : "yellow";
@@ -76,16 +76,18 @@
 				this.overlayCtx.fill();
 				this.overlayCtx.closePath();
 
-				for (var ii = 0; ii < player.activeMutator.length; ii++) {
-					this.drawTimer(player.position, player.activeMutator[ii].duration / player.activeMutator[ii].maxDuration);
+				for (let ii = 0; ii < player.activeMutator.length; ii++) {
+					let mutator = player.activeMutator[ii]
+					this.drawTimer(player.position, mutator.duration / mutator.maxDuration, mutator.color);
+					break;
 				}
 			}
 			this.overlayCtx.restore();
 		}
-		drawTimer(pos, time) {
+		drawTimer(pos, time, color) {
 			this.overlayCtx.beginPath();
 			this.overlayCtx.fillStyle = "rgba(0, 0, 0, 0)";
-			this.overlayCtx.strokeStyle = "#99CC33";
+			this.overlayCtx.strokeStyle = color;
 			this.overlayCtx.lineCap = "square";
 			this.overlayCtx.lineWidth = 5.0;
 
