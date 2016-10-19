@@ -17,12 +17,14 @@
 	};
 	/**
 	 * @name config
-	 * @property {Array.<Player>} 	Config.player
-	 * @property {Array.<Modules>} 	Config.modules
-	 * @property {Array.<string>} 	Config.pickups
-	 * @property {number} 			Config.width
-	 * @property {number} 			Config.height
-	 * @property {boolean} 			Config.inMatch
+	 * @property {Array.<Player>} 				Config.player
+	 * @property {Array.<Modules>} 				Config.modules
+	 * @property {Array.<string>} 				Config.pickups
+	 * @property {number} 						Config.width
+	 * @property {number} 						Config.height
+	 * @property {boolean} 						Config.inMatch
+	 * @property {CanvasRenderingContext2D}		Config.underlayCtx
+	 * @property {CanvasRenderingContext2D}		Config.ctx
 	 */
 
 	/** @typeof {config} */
@@ -42,8 +44,9 @@
 			"GamePlay"
 		],
 		pickups: [
-			"SpeedBoost",
-			"SpeedBoostSpecial"
+			// "SpeedBoost",
+			// "SpeedBoostSpecial",
+			"Bazuka"
 		],
 		width: window.innerWidth,
 		height: window.innerHeight,
@@ -316,6 +319,7 @@
 		tick(delta) {}
 		draw() {}
 	}
+	Game.classes.Entity = Entity;
 	/**
 	 * Base Module
 	 */
@@ -327,19 +331,19 @@
 	Game.classes.Module = Module;
 	/**
 	 * @name 	 Player
-	 * @property {jQuery} 			Player.$playerDom
-	 * @property {Victor} 			Player.ctx
-	 * @property {Victor} 			Player.direction
-	 * @property {number} 			Player.moveIntent
-	 * @property {number} 			Player.steerForce
-	 * @property {number} 			Player.size
-	 * @property {number} 			Player.speed
-	 * @property {boolean} 			Player.dead
-	 * @property {number} 			Player.id
-	 * @property {string} 			Player.name
-	 * @property {string} 			Player.color
-	 * @property {object} 			Player.inputs
-	 * @property {Array.<Mutator>} 	Player.activeMutator
+	 * @property {jQuery} 						Player.$playerDom
+	 * @property {CanvasRenderingContext2D}		Player.ctx
+	 * @property {Victor} 						Player.direction
+	 * @property {number} 						Player.moveIntent
+	 * @property {number} 						Player.steerForce
+	 * @property {number} 						Player.size
+	 * @property {number} 						Player.speed
+	 * @property {boolean} 						Player.dead
+	 * @property {number} 						Player.id
+	 * @property {string} 						Player.name
+	 * @property {string} 						Player.color
+	 * @property {object} 						Player.inputs
+	 * @property {Array.<Mutator>} 				Player.activeMutator
 	 */
 	class Player extends Entity {
 		constructor(conf) {
