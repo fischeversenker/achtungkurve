@@ -4,35 +4,21 @@
 (function() {
 	class SpeedBoostPickup extends Game.classes.Pickup {
 		constructor(...sup) {
-			super(...sup);
+			super("default", ...sup);
 			this.maxDuration = 5000;
-			this.owner = null;
-		}
-		dispose() {
-			this.owner.speed = 1;
-			super.dispose();
+			this.color = 'green';
 		}
 		/**
 		 * @param {Player} player
 		 */
 		pickedUp(player) {
-			player.speed += 0.5;
 		}
-		/**
-		 * @param {number} delta time
-		 */
-		tick(delta) {
-			super.tick(delta);
-			if(this.owner != null) {
-				this.duration += delta;
-				if(this.duration >= this.maxDuration) {
-					//reset value
-					this.owner.speed = 1;
-					this.owner.removeMutator(this);
-					this.dispose();
-				}
-			}
+		onMutate() {
+			this.owner.speed += 1;
+		}
+		OnUnMutate() {
+			this.owner.speed -= 1;
 		}
 	}
-	Game.register("SpeedBoostPickup", SpeedBoostPickup);
+	Game.register("SpeedBoost", SpeedBoostPickup);
 })();

@@ -2,21 +2,24 @@
 	"use strict";
 	/**
 	 * @name Game
-	 * @property {Array.<Module>} 			Game.modules
-	 * @property {Array.<Entity>} 			Game.classes
+	 * @property {Object} 					Game.modules
+	 * @property {Object} 					Game.pickups
+	 * @property {Object} 					Game.classes
 	 * @property {function(Object)} 		Game.init
 	 * @property {function(name, classObj)} Game.register
 	 */
 
 	/** @type {Game|*} */
 	var Game = {
-		modules: [],
+		modules: {},
+		pickups: {},
 		classes: {}
 	};
 	/**
 	 * @name config
 	 * @property {Array.<Player>} 	Config.player
 	 * @property {Array.<Modules>} 	Config.modules
+	 * @property {Array.<string>} 	Config.pickups
 	 * @property {number} 			Config.width
 	 * @property {number} 			Config.height
 	 * @property {boolean} 			Config.inMatch
@@ -24,7 +27,6 @@
 
 	/** @typeof {config} */
 	var config;
-
 
 	var mods = [],	//loaded mods
 		partyCheck = null,
@@ -39,10 +41,13 @@
 			"DataGui",
 			"GamePlay"
 		],
+		pickups: [
+			"SpeedBoost",
+			"SpeedBoostSpecial"
+		],
 		width: window.innerWidth,
 		height: window.innerHeight,
 		inMatch: false,
-		pickups: [],
 		startGameTime: 2000,
 	};
 
@@ -142,12 +147,16 @@
 	 */
 	Game.register = function (name, classObj, dependencies = []) {
 		//@todo save dependencies
-		Game.modules[name] = classObj;
+		if (classObj.prototype instanceof Game.classes.Pickup) {
+			Game.pickups[name] = classObj;
+		} else {
+			Game.modules[name] = classObj;
+		}
 	};
-	Game.create = function (name, classObj, dependencies = []) {
-		//@todo save dependencies
-		Game.modules[name] = classObj;
-	};
+	// Game.create = function (name, classObj, dependencies = []) {
+	// 	//@todo save dependencies
+	// 	Game.modules[name] = classObj;
+	// };
 	/**
 	 * @param {Entity} entity
 	 */
@@ -356,17 +365,17 @@
 		}
 		onRoundEnd() {
 			this.dead = true;
-			this.clearPickups();
+			this.clearMutators();
 		}
 		onPlayerDied(player) {
 			if (player === this) {
-				this.clearPickups();
+				this.clearMutators();
 			}
 		}
-		clearPickups() {
+		clearMutators() {
 			var mutatorBack = this.activeMutator.slice();
 			for (var i = 0; i < mutatorBack.length; i++) {
-				mutatorBack[i].dispose();
+				mutatorBack[i].detach();
 			}
 		}
 		bindInputs() {
@@ -381,26 +390,42 @@
 						break;
 					case player.inputs.special:
 						player.specialIntent = true;
+						player.special(true);
 						break;
 				}
 			});
 			$(window).on('keyup', function (e) {
 				if (e.which == player.inputs.left || e.which == player.inputs.right) player.moveIntent = 0;
-				if (e.which == player.inputs.special) player.specialIntent = false;
+				if (e.which == player.inputs.special) {
+					player.specialIntent = false;
+					player.special(false);
+				}
 			});
 		}
-		special() {
-			this.specialIntent = true;
+		special(pressed) {
+			if (this.activeMutator.length < 1) return;
+			if (this.activeMutator[0].mutatorType === "special") {
+				(pressed)? this.activeMutator[0].mutate() : this.activeMutator[0].unMutate();
+			}
 		}
+		/**  mutable interface  **/
 		addMutator(mutator) {
-			this.activeMutator.push(mutator);
+			var index = this.activeMutator.push(mutator) - 1;
+			console.log("mutate index " + index);
+			if (index === 0 && mutator.mutatorType === "default"){
+				mutator.mutate();
+				console.log("mutate");
+			}
 		}
 		removeMutator(mutator) {
 			var index = this.activeMutator.indexOf(mutator);
 			if (index > -1) {
 				this.activeMutator.splice(index, 1);
 			}
+			if (this.activeMutator.length > 0 && this.activeMutator[0].mutatorType === "default")
+				this.activeMutator[0].mutate();
 		}
+		/**  mutable interface end **/
 		tick(delta) {
 			if (this.dead) return;
 			this.direction.rotateDeg(this.moveIntent * this.steerForce * this.speed / delta);
@@ -413,7 +438,7 @@
 			}
 			if (this.position.y < 0) {
 				this.position.y += config.height;
-			} else if(this.position.x > config.height) {
+			} else if(this.position.y > config.height) {
 				this.position.y -= config.height;
 			}
 		}
@@ -445,16 +470,53 @@
 	 *
 	 */
 	class Mutator extends Entity {
-		constructor(position) {
+		/**
+		 * @param {string} type can be "default", "special"
+		 * @param position
+		 */
+		constructor(type, position) {
 			super(position);
 			this.owner = null;
 			this.maxDuration = 3000;
 			this.duration = 0;
+			this.mutatorType = type || 'default';//default, press, hold
+			this.isMutated = false;
 		}
-		dispose() {
+		attach(mutable) {
+			this.owner = mutable;
+			this.owner.addMutator(this);
+			if ("pickedUp" in this) this.pickedUp(mutable);
+		}
+		detach() {
+			if (this.isMutated) this.unMutate();
 			this.owner.removeMutator(this);
-			super.dispose();
+			this.owner = null;
 		}
+		tick(delta) {
+			super.tick(delta);
+			if(this.owner != null) {
+				if (this.isMutated) {
+					this.duration += delta;
+					if(this.duration >= this.maxDuration) {
+						this.detach();
+					}
+				}
+			}
+		}
+		mutate() {
+			if (!this.isMutated) {
+				this.isMutated = true;
+				this.onMutate();
+			}
+		}
+		unMutate() {
+			if (this.isMutated) {
+				this.isMutated = false;
+				this.OnUnMutate();
+			}
+		}
+		onMutate() {}
+		OnUnMutate() {}
 	}
 	Game.classes.Mutator = Mutator;
 	/**
@@ -465,27 +527,28 @@
 	 * @property {number} 	Pickup.duration
 	 */
 	class Pickup extends Mutator {
-		constructor(position) {
-			super(position);
+		constructor(type, position) {
+			super(type, position);
 			var conf = super.getConfig();
 			this.ctx = conf.underlayCtx;
 			this.radius = 20;
+			this.color = 'yellow';
 		}
 		tick(delta) {
+			super.tick(delta);
 			if (this.owner === null) {
 				var p = this.checkCollision();
 				if (p != false) {
-					this.owner = p;
-					this.owner.addMutator(this);
-					if ("pickedUp" in this) this.pickedUp(this.owner);
+					this.attach(p);
 				}
 			}
 		}
-		draw() {
+		draw(delta) {
+			super.draw(delta);
 			if(this.owner == null) {
 				this.ctx.beginPath();
-				this.ctx.fillStyle = "yellow";
-				this.ctx.arc(this.position.x, this.position.y, 30, 0, 2 * Math.PI);
+				this.ctx.fillStyle = this.color;
+				this.ctx.arc(this.position.x, this.position.y, this.radius, 0, 2 * Math.PI);
 				this.ctx.fill();
 			}
 		}

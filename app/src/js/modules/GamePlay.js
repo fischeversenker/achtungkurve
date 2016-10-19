@@ -15,25 +15,28 @@
 		onRoundStart() {
 		};
 		onPlayerDied(player) {};
-		onRoundEnd() {};
+		onRoundEnd() {
+			//@todo remove all pickups
+		};
 		tick(delta) {
 			this.time += delta;
 			if (this.next < this.time) {
-				this.next = Math.random() * 20000 + 7000 + this.time;
+				this.next = Math.random() * 10000 + 7000 + this.time;
 				this.placePickup();
 			}
 		}
 		placePickup() {
-			Game.activateEntity(new Game.modules["SpeedBoostSpecialPickup"](this.getRandomPosition(50)));
+			Game.activateEntity(this.getRandomPickup());
 		}
 		getRandomPickup() {
-
+			var pickupName = this.config.pickups[Math.floor(Math.random() * this.config.pickups.length)];
+			return new Game.pickups[pickupName](this.getRandomPosition(350));
 		}
 		getRandomPosition(borderWidth) {
 			//@todo move to better place
 			return new Victor(
-				Math.random() * (this.config.width - borderWidth) + borderWidth,
-				Math.random() * (this.config.height - borderWidth) + borderWidth
+				Math.random() * (this.config.width - borderWidth * 2) + borderWidth,
+				Math.random() * (this.config.height - borderWidth * 2) + borderWidth
 			);
 		}
 	}
