@@ -48,8 +48,10 @@
 						text.text = "GO!";
 						text.alpha = 1;
 						text.size = 20;
-						text.attach(new CanvasText.animations.FadeOut(750));
 						text.attach(new CanvasText.animations.FadeSize(120, 750));
+						text.attach(new CanvasText.animations.FadeOut(755, function() {
+							text.setActive(false);
+						}));
 					}));
 					text.attach(new CanvasText.animations.FadeSize(20, 750));
 				}));

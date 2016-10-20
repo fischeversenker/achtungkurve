@@ -1,7 +1,6 @@
 (function() {
 	"use strict";
 	var drawables = [],
-		idCount = 0,
 		run = false,
 		lastUpdate = 0;
 
@@ -11,10 +10,6 @@
 		var deltaTime = now - lastUpdate;
 		lastUpdate = now;
 
-		// for(let i = 0; i < animations.length; i++) {
-		// 	let anim = animations[i];
-		// 	anim.fn.call(anim, deltaTime);
-		// }
 		for(let i = 0; i < drawables.length; i++) {
 			drawables[i].draw(deltaTime);
 		}
@@ -94,7 +89,8 @@
 		}
 		draw(delta) {
 			for(let i = 0; i < this.animations.length; i++) {
-				this.animations[i].animate(delta);
+				if (this.animations[i].text != null)
+					this.animations[i].animate(delta);
 			}
 			this.ctx.save();
 			this.ctx.globalAlpha = this.alpha;
@@ -143,7 +139,9 @@
 			this.time += delta;
 			if (this.time >= this.duration) {
 				this.detach();
-				if (typeof this.onEnd === "function") this.onEnd();
+				if (typeof this.onEnd === "function"){
+					this.onEnd();
+				}
 			}
 		}
 	}

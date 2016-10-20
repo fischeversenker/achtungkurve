@@ -44,8 +44,8 @@
 			"GamePlay"
 		],
 		pickups: [
-			// "SpeedBoost",
-			// "SpeedBoostSpecial",
+			"SpeedBoost",
+			"SpeedBoostSpecial",
 			"Bazuka"
 		],
 		width: window.innerWidth,
