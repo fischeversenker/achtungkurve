@@ -16,13 +16,14 @@
 				.appendTo(conf.dom);
 			this.overlayCtx = $overlay[0].getContext("2d");
 			this.msg = null;
+			this.textPosCenter = new Victor(conf.ctx.canvas.width / 2, conf.ctx.canvas.height / 2);
 		}
 		onGameInit() {
 
 		}
 		onPartyCheck() {
 			//show text  "Press Special Key"
-			this.msg = new CanvasText.Text("Press Special Key", 30, this.overlayCtx, new Victor(200, 200), 0);
+			this.msg = new CanvasText.Text("Press Special Key", 30, this.overlayCtx, this.textPosCenter, 0);
 			this.msg.setActive();
 			var a = new CanvasText.animations.Pulsate(5);
 			a.attach(this.msg);
@@ -32,7 +33,7 @@
 			this.msg.setActive(false);
 			this.msg = null;
 			var ctx = this.overlayCtx;
-			var text = new CanvasText.Text("3", 30, ctx, new Victor(200, 200), 0);
+			var text = new CanvasText.Text("3", 30, ctx, this.textPosCenter, 0);
 				text.alpha = 1;
 				text.size = 60;
 			text.setActive();
@@ -78,10 +79,9 @@
 				this.overlayCtx.fill();
 				this.overlayCtx.closePath();
 
-				for (let ii = 0; ii < player.activeMutator.length; ii++) {
-					let mutator = player.activeMutator[ii]
+				if (player.activeMutator.length > 0) {
+					let mutator = player.activeMutator[0];
 					this.drawTimer(player.position, mutator.duration / mutator.maxDuration, mutator.color);
-					break;
 				}
 			}
 			this.overlayCtx.restore();

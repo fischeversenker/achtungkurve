@@ -53,20 +53,32 @@
 	// 		if (animations[I].id == id) return animations[I];
 	// 	}
 	// }
-
 	/**
-	 *	Text
+	 *
 	 */
 	class Text {
 		constructor(textString, size, ctx, pos) {
 			this.ctx 	= ctx;
 			this.text 	= textString;
+			this.stroke = false;
 			this.size 	= size;
 			this.pos 	= pos;
-			this.angle 	= 0;
+			this.angle 	= 45;
 			this.alpha	= 1;
-			this.font 	= "Arial";//"Comic Sans MS";
+			this.font 				= "Arial";//"Comic Sans MS";
+			this.fillStyle			= "red";
+			this.strokeStyle		= "red";
+			this.shadowColor 		= "lime";
+			this.shadowBlur 		= 0;
+			this.shadowOffsetX		= 0;
+			this.shadowOffsetY		= 0;
+			this.textAlign 			= "center";
+			this.textBaseline 		= "middle";
 			this.animations = [];
+		}
+		measureText() {
+			this.ctx.font = this.size + "px " + this.font;
+			return ctx.measureText(this.text);
 		}
 		attach(animation, _mode = false) {
 			if (!(animation instanceof TextAnimation)) {
@@ -93,11 +105,19 @@
 					this.animations[i].animate(delta);
 			}
 			this.ctx.save();
-			this.ctx.globalAlpha = this.alpha;
-			this.ctx.font = this.size + "px " + this.font;
-			this.ctx.fillStyle = "red";
-			this.ctx.textAlign = "center";
-			this.ctx.fillText(this.text, this.pos.x, this.pos.y);
+			this.ctx.globalAlpha 	= this.alpha;
+			this.ctx.font 			= this.size + "px " + this.font;
+			this.ctx.fillStyle 		= this.fillStyle;
+			this.ctx.strokeStyle 	= this.strokeStyle;
+			this.ctx.shadowBlur 	= this.shadowBlur;
+			this.ctx.shadowColor 	= this.shadowColor;
+			this.ctx.shadowOffsetX	= this.shadowOffsetX;
+			this.ctx.shadowOffsetY	= this.shadowOffsetY;
+			this.ctx.textAlign 		= this.textAlign;
+			this.ctx.textBaseline 	= this.textBaseline;
+			this.ctx.translate(this.pos.x, this.pos.y);
+			this.ctx.rotate(this.angle * Math.PI / 180);
+			this.ctx[(this.stroke)? "strokeText": "fillText"](this.text, 0, 0);
 			this.ctx.restore();
 		}
 	}
