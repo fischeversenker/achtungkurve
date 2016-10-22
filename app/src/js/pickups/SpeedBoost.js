@@ -8,11 +8,6 @@
 			this.maxDuration = 5000;
 			this.color = 'green';
 		}
-		/**
-		 * @param {Player} player
-		 */
-		pickedUp(player) {
-		}
 		onMutate() {
 			this.owner.speed += 1;
 		}

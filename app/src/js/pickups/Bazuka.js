@@ -46,14 +46,12 @@
 	class Bazuka extends Game.classes.Pickup {
 		constructor(...sup) {
 			super("special", ...sup);
-			this.rockets = Math.ceil(Math.random() * 3);
-			this.maxDuration = this.rockets * 1000;
+			this.rockets = 3;//Math.ceil(Math.random() * 3);
+			this.maxDuration = 0;
 			this.color = 'red';
 		}
 		onMutate() {
-			//fire
-			var rocket = new Rocket(this.owner.direction.clone(), this.owner.position.clone());
-			Game.activateEntity(rocket);
+			this.fire();
 			this.rockets--;
 			this.maxDuration -= 1000;
 			if (this.rockets === 0) {
@@ -62,6 +60,8 @@
 		}
 		OnUnMutate() {}
 		fire() {
+			var rocket = new Rocket(this.owner.direction.clone(), this.owner.position.clone());
+			Game.activateEntity(rocket);
 		}
 	}
 	Game.register("Bazuka", Bazuka);

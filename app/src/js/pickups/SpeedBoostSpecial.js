@@ -8,18 +8,12 @@
 			this.maxDuration = 5000;
 			this.color = 'yellow';
 		}
-		/**
-		 * @param {Player} player
-		 */
-		pickedUp(player) {
-		}
 		onMutate() {
 			this.owner.speed += 1;
 		}
 		OnUnMutate() {
 			this.owner.speed -= 1;
 		}
-
 	}
 	Game.register("SpeedBoostSpecial", SpeedBoostSpecialPickup);
 })();

@@ -9,7 +9,7 @@
 	 * @property {function(name, classObj)} Game.register
 	 */
 
-	/** @type {Game|*} */
+	/** @global Game*/
 	var Game = {
 		modules: {},
 		pickups: {},
@@ -330,7 +330,7 @@
 	}
 	Game.classes.Module = Module;
 	/**
-	 * @name 	 Player
+	 * @typedes 	 Player
 	 * @property {jQuery} 						Player.$playerDom
 	 * @property {CanvasRenderingContext2D}		Player.ctx
 	 * @property {Victor} 						Player.direction
@@ -417,7 +417,6 @@
 			var index = this.activeMutator.push(mutator) - 1;
 			if (index === 0 && mutator.mutatorType === "default"){
 				mutator.mutate();
-				console.log("mutate");
 			}
 		}
 		removeMutator(mutator) {
@@ -467,7 +466,6 @@
 		}
 	}
 
-
 	/**
 	 * @name Mutator
 	 *
@@ -480,15 +478,14 @@
 		constructor(type, position) {
 			super(position);
 			this.owner = null;
-			this.maxDuration = 3000;
 			this.duration = 0;
+			this.maxDuration = 3000;
 			this.mutatorType = type || 'default';//default, press, hold
 			this.isMutated = false;
 		}
 		attach(mutable) {
 			this.owner = mutable;
 			this.owner.addMutator(this);
-			if ("pickedUp" in this) this.pickedUp(mutable);
 		}
 		detach() {
 			if (this.isMutated) this.unMutate();
@@ -498,7 +495,7 @@
 		tick(delta) {
 			super.tick(delta);
 			if(this.owner != null) {
-				if (this.isMutated) {
+				if (this.isMutated && this.maxDuration > 0) {
 					this.duration += delta;
 					if(this.duration >= this.maxDuration) {
 						this.detach();
@@ -536,13 +533,14 @@
 			this.ctx = conf.underlayCtx;
 			this.radius = 20;
 			this.color = 'yellow';
+			this.target = 'player'; //, "enemies" or "all
 		}
 		tick(delta) {
 			super.tick(delta);
 			if (this.owner === null) {
 				var p = this.checkCollision();
 				if (p != false) {
-					this.attach(p);
+					this.pickup(p);
 				}
 			}
 		}
@@ -563,6 +561,21 @@
 				}
 			}
 			return false;
+		}
+		pickup(player) {
+			var conf = super.getConfig();
+			switch(this.target) {
+				case "player":
+					this.attach(player);
+					break;
+				case "enemies":
+					for(let i = 0; i < conf.players.length; i++) {
+						conf.players[i].attach(this);
+					}
+					break;
+				case "all":
+					break;
+			}
 		}
 	}
 	Game.classes.Pickup = Pickup;
