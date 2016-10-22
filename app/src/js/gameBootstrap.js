@@ -67,7 +67,7 @@
 			onPartyReady: [],
 		},
 		bindEntity: function (entity) {
-			var methods = Object.getOwnPropertyNames(entity.__proto__);
+			var methods = Object.getOwnPropertyNames(Object.getPrototypeOf(entity));
 			for(var i = 0; i < methods.length; i++) {
 				if (methods[i] in this.listeners && methods[i] != "constructor") {
 					this.listeners[methods[i]].push(entity);
@@ -116,14 +116,15 @@
 		config.ctx = this.$playerDom[0].getContext("2d");
 
 		//player init
-		var players = [];
-		for (var i = 0; i < config.player.length; i++) {
+		var players = [],
+        i;
+		for (i = 0; i < config.player.length; i++) {
 			players.push( new Player(config.player[i]) );
 		}
 		config.player = players;
 
 		//module init
-		for (var i = 0; i < config.modules.length; i++) {
+		for (i = 0; i < config.modules.length; i++) {
 			try {
 				var mod = new Game.modules[config.modules[i]]();
 				Game.activateEntity(mod);
@@ -193,7 +194,7 @@
 	}
 	function checkParty(fn) {
 		Events.fire("onPartyCheck");
-		if (partyCheck != null) return false;
+		if (partyCheck !== null) return false;
 		//check for all special keys
 		partyCheck = function() {
 			var sum = 0;
@@ -233,13 +234,13 @@
 		//check palyer collision
 		for(let i = 0; i < config.player.length; i++) {
 			if (config.player[i].dead) continue;
-			if(checkCollision(config.player[i])) {
+			if (checkCollision(config.player[i])) {
 				killPlayer(config.player[i]);
 			}
 		}
 		Events.fire("onPostTick");
 
-		if(needDeactivation.length > 0) {
+		if (needDeactivation.length > 0) {
 			for(let i = 0; i < needDeactivation.length; i++) {
 				Events.unbindEntity(needDeactivation[i]);
 				let index = activeEntities.indexOf(needDeactivation[i]);
@@ -249,7 +250,7 @@
 			}
 			needDeactivation = [];
 		}
-		if (!config.inMatch && partyCheck != null) partyCheck.call(null, deltaTime);
+		if (!config.inMatch && partyCheck !== null) partyCheck.call(null, deltaTime);
 	}
 	/**
 	 *
@@ -280,7 +281,7 @@
 	function checkCollision(player) {
 		var checkPoint = player.direction.clone().add(player.position);
 		var imgd = config.ctx.getImageData(Math.round(checkPoint.x), Math.round(checkPoint.y), 1, 1);
-		if (imgd.data[3] != 0) return true;
+		if (imgd.data[3] !== 0) return true;
 
 		return false;
 	}
@@ -409,13 +410,14 @@
 		special(pressed) {
 			if (this.activeMutator.length < 1) return;
 			if (this.activeMutator[0].mutatorType === "special") {
-				(pressed)? this.activeMutator[0].mutate() : this.activeMutator[0].unMutate();
+				if (pressed) this.activeMutator[0].mutate();
+        else this.activeMutator[0].unMutate();
 			}
 		}
 		/**  mutable interface  **/
 		addMutator(mutator) {
 			var index = this.activeMutator.push(mutator) - 1;
-			if (index === 0 && mutator.mutatorType === "default"){
+			if (index === 0 && mutator.mutatorType === "default") {
 				mutator.mutate();
 				console.log("mutate");
 			}
@@ -436,12 +438,12 @@
 			//check field outs'
 			if (this.position.x < 0) {
 				this.position.x += config.width;
-			} else if(this.position.x > config.width) {
+			} else if (this.position.x > config.width) {
 				this.position.x -= config.width;
 			}
 			if (this.position.y < 0) {
 				this.position.y += config.height;
-			} else if(this.position.y > config.height) {
+			} else if (this.position.y > config.height) {
 				this.position.y -= config.height;
 			}
 		}
@@ -497,10 +499,10 @@
 		}
 		tick(delta) {
 			super.tick(delta);
-			if(this.owner != null) {
+			if (this.owner !== null) {
 				if (this.isMutated) {
 					this.duration += delta;
-					if(this.duration >= this.maxDuration) {
+					if (this.duration >= this.maxDuration) {
 						this.detach();
 					}
 				}
@@ -541,14 +543,14 @@
 			super.tick(delta);
 			if (this.owner === null) {
 				var p = this.checkCollision();
-				if (p != false) {
+				if (p !== false) {
 					this.attach(p);
 				}
 			}
 		}
 		draw(delta) {
 			super.draw(delta);
-			if(this.owner == null) {
+			if (this.owner === null) {
 				this.ctx.beginPath();
 				this.ctx.fillStyle = this.color;
 				this.ctx.arc(this.position.x, this.position.y, this.radius, 0, 2 * Math.PI);

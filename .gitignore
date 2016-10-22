@@ -1,3 +1,7 @@
 .idea
 node_modules
 app/bower_components
+*.css.map
+.sass-cache
+.jshintrc
+.tern-project
