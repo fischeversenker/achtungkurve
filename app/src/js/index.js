@@ -1,4 +1,4 @@
-$(function(){
+$(function() {
   var app = function() {
 
     var $gameConfig = $('#game-config');
@@ -6,7 +6,7 @@ $(function(){
     var game;
 
     function init() {
-      $('#start-game-btn').click(function(e){
+      $('#start-game-btn').click(function(e) {
         $gameConfig.hide();
 
         var config = {
@@ -34,12 +34,13 @@ $(function(){
         $gameCanvas.show();
         game = Game.init(config);
       });
-    };
+    }
 
     return {
       init: init,
-    }
-  }
+    };
+  };
+
 apppp = app();
 apppp.init();
 

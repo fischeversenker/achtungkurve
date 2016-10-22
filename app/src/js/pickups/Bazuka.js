@@ -30,13 +30,13 @@
 		checkCollision() {
 			var checkPoint = this.direction.clone().add(this.position);
 			var imgd = this.ctx.getImageData(Math.round(checkPoint.x), Math.round(checkPoint.y), 1, 1);
-			if (imgd.data[3] != 0) return true;
+			if (imgd.data[3] !== 0) return true;
 			return false;
 		}
 		explode() {
 			var pos = this.position;
 			this.ctx.save();
-			this.ctx.globalCompositeOperation = 'destination-out'
+			this.ctx.globalCompositeOperation = 'destination-out';
 			this.ctx.arc(pos.x, pos.y, this.detonationRadius, 0, Math.PI * 2, true);
 			this.ctx.fill();
 			this.ctx.restore();
