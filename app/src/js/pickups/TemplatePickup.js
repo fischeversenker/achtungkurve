@@ -6,7 +6,7 @@
 			this.owner = null;
 			this.duration = 0;
 			this.maxDuration = 3000;
-			this.mutatorType = type || 'default';//default, press, hold
+			this.mutatorType = type || 'default';
 			this.isMutated = false;
 			//pickup properties
 			this.ctx;

@@ -44,9 +44,11 @@
 			"GamePlay"
 		],
 		pickups: [
-			"SpeedBoost",
-			"SpeedBoostSpecial",
-			"Bazuka"
+//			"SpeedBoost",
+//			"SpeedBoostSpecial",
+//			"Bazuka",
+//            "Bold",
+            "Blink"
 		],
 		width: window.innerWidth,
 		height: window.innerHeight,
@@ -348,6 +350,7 @@
 	class Player extends Entity {
 		constructor(conf) {
 			super(conf.position || new Victor(Math.random() * 400, Math.random() * 400));
+            this.playerConfig = conf;
 			this.ctx = config.ctx;
 			this.direction = new Victor(1, 1);
 			this.steerForce = 50;
