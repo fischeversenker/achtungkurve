@@ -44,25 +44,28 @@
 					special: 83,
 					right: 65
 				}
-			},{
-				id: 2,
-				name: "Vroni",
-				color: "orange",
-				inputs: {
-					left: 68,
-					special: 83,
-					right: 65
-				}
-			},{
-				id: 3,
-				name: "Yasna",
-				color: "pink",
-				inputs: {
-					left: 68,
-					special: 83,
-					right: 65
-				}
-			}];
+			},
+			// {
+			// 	id: 2,
+			// 	name: "Vroni",
+			// 	color: "orange",
+			// 	inputs: {
+			// 		left: 68,
+			// 		special: 83,
+			// 		right: 65
+			// 	}
+			// },
+			// {
+			// 	id: 3,
+			// 	name: "Yasna",
+			// 	color: "pink",
+			// 	inputs: {
+			// 		left: 68,
+			// 		special: 83,
+			// 		right: 65
+			// 	}
+			// }
+			];
 			this._domTemplate = `<li class="folder">
 						<div class="content">
 							<span class="node-name"></span>

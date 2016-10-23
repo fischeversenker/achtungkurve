@@ -5,26 +5,14 @@
 	class BlinkPickup extends Game.classes.Pickup {
 		constructor(...sup) {
 			super("special", ...sup);
-			this.maxDuration = 5000;
+			this.maxDuration = 1000;
 			this.color = 'blue';
-            this.blinkPower = 0;
-            
+            this.blinkPower = 0.4;
 		}
-		/**
-		 * @param {Player} player
-		 */
-        tick(delta) {
-            super.tick(delta);
-            if (this.owner !== null) {
-                console.log(this.duration);
-            }
-        }
-		pickedUp(player) {
-		}
-		onMutate() {}
 		OnUnMutate() {
-            var scale = this.duration;
-            this.owner.position = new Victor(this.owner.direction.clone()).multiply(new Victor(scale, scale));
+            var scale = this.duration * this.blinkPower;
+			this.owner.position.add(this.owner.direction.clone().multiplyScalar(scale));
+			this.detach();
 		}
 	}
 	Game.register("Blink", BlinkPickup);
