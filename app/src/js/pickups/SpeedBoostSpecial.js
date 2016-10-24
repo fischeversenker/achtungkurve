@@ -2,18 +2,19 @@
  * Created by salt on 02.09.2016.
  */
 (function() {
-	class SpeedBoostSpecialPickup extends Game.classes.Pickup {
-		constructor(...sup) {
-			super("special", ...sup);
+	class SpeedBoostSpecialMutator extends Game.classes.Mutator {
+		constructor() {
+			super();
+			this.mutatorType = 'special';
 			this.maxDuration = 5000;
 			this.color = 'yellow';
 		}
 		onMutate() {
 			this.owner.speed += 1;
 		}
-		OnUnMutate() {
+		onUnMutate() {
 			this.owner.speed -= 1;
 		}
 	}
-	Game.register("SpeedBoostSpecial", SpeedBoostSpecialPickup);
+	Game.register("SpeedBoostSpecial", SpeedBoostSpecialMutator);
 })();

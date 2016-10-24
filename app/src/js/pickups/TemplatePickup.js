@@ -1,23 +1,20 @@
 (function() {
-	class TemplatePickup extends Game.classes.Pickup {
-		constructor(...sup) {
-			super("default", ...sup);
-			//mutator properties
+	class TemplateMutator extends Game.classes.Mutator {
+		constructor() {
+			super();
+			this.mutatorType = 'default';// or "special"
 			this.owner = null;
 			this.duration = 0;
 			this.maxDuration = 3000;
 			this.mutatorType = type || 'default';
 			this.isMutated = false;
-			//pickup properties
-			this.ctx;
-			this.radius = 20;
 			this.color = 'yellow';
 			this.target = 'player'; //, "enemies" or "all"
 		}
 		onMutate() {
 			//change pr0perties
 		}
-		OnUnMutate() {
+		onUnMutate() {
 			//restore properties
 		}
 		pickup(player) {
@@ -32,6 +29,6 @@
 			super.tick(delta);
 		}
 	}
-	//register pickup
-	//Game.register("TemplatePickup", TemplatePickup);
+	//register mutator
+	//Game.register("TemplateMutator", TemplateMutator);
 })();

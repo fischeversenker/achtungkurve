@@ -2,18 +2,19 @@
  * Created by salt on 02.09.2016.
  */
 (function() {
-	class BlinkPickup extends Game.classes.Pickup {
-		constructor(...sup) {
-			super("special", ...sup);
+	class BlinkMutator extends Game.classes.Mutator {
+		constructor() {
+			super();
+			this.mutatorType = 'special';
 			this.maxDuration = 1000;
 			this.color = 'blue';
             this.blinkPower = 0.4;
 		}
-		OnUnMutate() {
+		onUnMutate() {
             var scale = this.duration * this.blinkPower;
 			this.owner.position.add(this.owner.direction.clone().multiplyScalar(scale));
 			this.detach();
 		}
 	}
-	Game.register("Blink", BlinkPickup);
+	Game.register("Blink", BlinkMutator);
 })();

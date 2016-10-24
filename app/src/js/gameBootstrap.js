@@ -3,6 +3,7 @@
 	/**
 	 * @name Game
 	 * @property {Object} 					Game.modules
+	 * @property {Object} 					Game.mutators
 	 * @property {Object} 					Game.pickups
 	 * @property {Object} 					Game.classes
 	 * @property {function(Object)} 		Game.init
@@ -12,6 +13,7 @@
 	/** @global Game*/
 	var Game = {
 		modules: {},
+		mutators: {},
 		pickups: {},
 		classes: {}
 	};
@@ -19,7 +21,7 @@
 	 * @name config
 	 * @property {Array.<Player>} 				Config.player
 	 * @property {Array.<Modules>} 				Config.modules
-	 * @property {Array.<string>} 				Config.pickups
+	 * @property {Array.<string>} 				Config.mutators
 	 * @property {number} 						Config.width
 	 * @property {number} 						Config.height
 	 * @property {boolean} 						Config.inMatch
@@ -43,12 +45,12 @@
 			"DataGui",
 			"GamePlay"
 		],
-		pickups: [
-//			"SpeedBoost",
-//			"SpeedBoostSpecial",
-//			"Bazuka",
-//            "Bold",
-            "Blink"
+		mutators: [
+			"SpeedBoost",
+			"SpeedBoostSpecial",
+			"Bazooka",
+			"Bold",
+			"Blink"
 		],
 		width: window.innerWidth,
 		height: window.innerHeight,
@@ -86,6 +88,8 @@
 			}
 		}
 	};
+
+	var needDeactivation = [];
 	/**
 	 * Game.init
 	 * @param conf
@@ -152,16 +156,29 @@
 	 */
 	Game.register = function (name, classObj, dependencies = []) {
 		//@todo save dependencies
-		if (classObj.prototype instanceof Game.classes.Pickup) {
-			Game.pickups[name] = classObj;
+		if (classObj.prototype instanceof Game.classes.Mutator) {
+			Game.mutators[name] = classObj;
 		} else {
 			Game.modules[name] = classObj;
 		}
 	};
-	// Game.create = function (name, classObj, dependencies = []) {
-	// 	//@todo save dependencies
-	// 	Game.modules[name] = classObj;
-	// };
+	Game.pickupFactory = function(mutatorType = null) {
+		var pickup;
+
+		if (mutatorType === null) {
+			//use random mutator
+			mutatorType = config.mutators[Math.floor(Math.random() * config.mutators.length)];
+		}
+		pickup = new Game.classes.Pickup(mutatorType, Game.getRandomPosition(50));
+		return pickup;
+	};
+	Game.getRandomPosition = function(borderWidth) {
+		//@todo move to better place
+		return new Victor(
+			Math.random() * (config.width - borderWidth * 2) + borderWidth,
+			Math.random() * (config.height - borderWidth * 2) + borderWidth
+		);
+	};
 	/**
 	 * @param {Entity} entity
 	 */
@@ -172,14 +189,13 @@
 	/**
 	 * @param {Entity} entity
 	 */
-	var needDeactivation = [];
 	Game.deActivateEntity = function(entity) {
 		needDeactivation.push(entity);
 	};
 
 	function clearField() {
 		config.ctx.clearRect(0, 0, config.width, config.height);
-		//@todo remove pickups
+		//@todo remove pickups and mutators
 		//@todo call clear event (so that modules can also clear something)
 	}
 	function startRound() {
@@ -432,6 +448,7 @@
 		/**  mutable interface end **/
 		tick(delta) {
 			if (this.dead) return;
+			if (this.activeMutator.length > 0) this.activeMutator[0].onTick(delta);
 			this.direction.rotateDeg(this.moveIntent * this.steerForce * this.speed / delta);
 			this.position.add(this.direction.clone().multiplyScalar(this.speed));
 			//check field outs'
@@ -472,18 +489,18 @@
 	 * @name Mutator
 	 *
 	 */
-	class Mutator extends Entity {
+	class Mutator {
 		/**
 		 * @param {string} type can be "default", "special"
-		 * @param position
 		 */
-		constructor(type, position) {
-			super(position);
+		constructor() {
 			this.owner = null;
 			this.duration = 0;
 			this.maxDuration = 3000;
-			this.mutatorType = type || 'default';//default, press, hold
+			this.mutatorType = 'default';// or "special"
 			this.isMutated = false;
+			this.color = "#fff";
+			this.target = 'player';
 		}
 		attach(mutable) {
 			this.owner = mutable;
@@ -494,14 +511,11 @@
 			this.owner.removeMutator(this);
 			this.owner = null;
 		}
-		tick(delta) {
-			super.tick(delta);
-			if(this.owner != null) {
-				if (this.isMutated && this.maxDuration > 0) {
-					this.duration += delta;
-					if(this.duration >= this.maxDuration) {
-						this.detach();
-					}
+		onTick(delta) {
+			if (this.isMutated && this.maxDuration > 0) {
+				this.duration += delta;
+				if(this.duration >= this.maxDuration) {
+					this.detach();
 				}
 			}
 		}
@@ -514,32 +528,34 @@
 		unMutate() {
 			if (this.isMutated) {
 				this.isMutated = false;
-				this.OnUnMutate();
+				this.onUnMutate();
 			}
 		}
 		onMutate() {}
-		OnUnMutate() {}
+		onUnMutate() {}
 	}
 	Game.classes.Mutator = Mutator;
 	/**
 	 * @name Pickup
 	 * @property {Player} 	Pickup.owner
 	 * @property {number} 	Pickup.radius
-	 * @property {number} 	Pickup.maxDuration
-	 * @property {number} 	Pickup.duration
 	 */
-	class Pickup extends Mutator {
+	class Pickup extends Entity {
 		constructor(type, position) {
-			super(type, position);
-			var conf = super.getConfig();
-			this.ctx = conf.underlayCtx;
+			super(position);
+			var conf = super.getConfig(),
+				mutator = new Game.mutators[type]();
+
+			this.color = mutator.color;
+			this.target = mutator.target;// "player", "enemies" or "all
+			this.mutatorType = type;
 			this.radius = 20;
-			this.color = 'yellow';
-			this.target = 'player'; //, "enemies" or "all
+			this._pickedUp = false;
+			this.ctx = conf.underlayCtx;
 		}
 		tick(delta) {
 			super.tick(delta);
-			if (this.owner === null) {
+			if (!this._pickedUp) {
 				var p = this.checkCollision();
 				if (p != false) {
 					this.pickup(p);
@@ -548,7 +564,7 @@
 		}
 		draw(delta) {
 			super.draw(delta);
-			if(this.owner == null) {
+			if(!this._pickedUp) {
 				this.ctx.beginPath();
 				this.ctx.fillStyle = this.color;
 				this.ctx.arc(this.position.x, this.position.y, this.radius, 0, 2 * Math.PI);
@@ -565,19 +581,29 @@
 			return false;
 		}
 		pickup(player) {
-			var conf = super.getConfig();
+			var conf = super.getConfig(),
+				mutator;
+
 			switch(this.target) {
 				case "player":
-					this.attach(player);
+					mutator = new Game.mutators[this.mutatorType]();
+					mutator.attach(player);
 					break;
 				case "enemies":
-					for(let i = 0; i < conf.players.length; i++) {
-						conf.players[i].attach(this);
+					for(var i = 0; i < conf.player.length; i++) {
+						if (conf.player[i] === player) continue;
+						mutator = new Game.mutators[this.mutatorType]();
+						mutator.attach(conf.player[i]);
 					}
 					break;
 				case "all":
+					for(var i = 0; i < conf.player.length; i++) {
+						mutator = new Game.mutators[this.mutatorType]();
+						mutator.attach(conf.player[i]);
+					}
 					break;
 			}
+			this._pickedUp = true;
 		}
 	}
 	Game.classes.Pickup = Pickup;

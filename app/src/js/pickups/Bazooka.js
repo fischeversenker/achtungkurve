@@ -43,12 +43,14 @@
 			this.detonated = true;
 		}
 	}
-	class Bazuka extends Game.classes.Pickup {
-		constructor(...sup) {
-			super("special", ...sup);
+	class BazookaMutator extends Game.classes.Mutator {
+		constructor() {
+			super();
+			this.mutatorType = 'special';
 			this.rockets = 3;//Math.ceil(Math.random() * 3);
 			this.maxDuration = 0;
 			this.color = 'red';
+			this.target = 'player'; //"player", "enemies" or "all"
 		}
 		onMutate() {
 			this.fire();
@@ -58,11 +60,10 @@
 				this.detach();
 			}
 		}
-		OnUnMutate() {}
 		fire() {
 			var rocket = new Rocket(this.owner.direction.clone(), this.owner.position.clone());
 			Game.activateEntity(rocket);
 		}
 	}
-	Game.register("Bazuka", Bazuka);
+	Game.register("Bazooka", BazookaMutator);
 })();

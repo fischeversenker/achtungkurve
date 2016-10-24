@@ -26,18 +26,7 @@
 			}
 		}
 		placePickup() {
-			Game.activateEntity(this.getRandomPickup());
-		}
-		getRandomPickup() {
-			var pickupName = this.config.pickups[Math.floor(Math.random() * this.config.pickups.length)];
-			return new Game.pickups[pickupName](this.getRandomPosition(350));
-		}
-		getRandomPosition(borderWidth) {
-			//@todo move to better place
-			return new Victor(
-				Math.random() * (this.config.width - borderWidth * 2) + borderWidth,
-				Math.random() * (this.config.height - borderWidth * 2) + borderWidth
-			);
+			Game.activateEntity(Game.pickupFactory());
 		}
 	}
 	Game.register("GamePlay", GamePlay);

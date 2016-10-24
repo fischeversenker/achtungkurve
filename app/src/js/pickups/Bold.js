@@ -2,9 +2,10 @@
  * Created by salt on 02.09.2016.
  */
 (function() {
-	class BoldPickup extends Game.classes.Pickup {
-		constructor(...sup) {
-			super("default", ...sup);
+	class BoldMutator extends Game.classes.Mutator {
+		constructor() {
+			super();
+			this.mutatorType = 'default';
 			this.maxDuration = 5000;
 			this.color = 'orange';
 		}
@@ -16,9 +17,9 @@
 		onMutate() {
 			this.owner.size += 10;
 		}
-		OnUnMutate() {
+		onUnMutate() {
 			this.owner.size -= 10;
 		}
 	}
-	Game.register("Bold", BoldPickup);
+	Game.register("Bold", BoldMutator);
 })();
