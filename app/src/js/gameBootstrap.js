@@ -33,7 +33,6 @@
 	var config;
 
 	var mods = [],	//loaded mods
-		partyCheck = null,
 		lastUpdate = Date.now(),
 		deltaTime = 0,
 		activeEntities = [];
@@ -88,7 +87,7 @@
 			}
 		}
 	};
-
+	Game.Events = Events;
 	var needDeactivation = [];
 	/**
 	 * Game.init
@@ -147,7 +146,6 @@
 		}
 		gameLoop();
 		Events.fire("onGameInit");
-		startRound();
 	};
 	/**
 	 * @param {string} 			name
@@ -193,48 +191,9 @@
 		needDeactivation.push(entity);
 	};
 
-	function clearField() {
-		config.ctx.clearRect(0, 0, config.width, config.height);
-		//@todo remove pickups and mutators
-		//@todo call clear event (so that modules can also clear something)
-	}
-	function startRound() {
-		checkParty(function() {
-			// window.setTimeout(function() {
-				clearField();
-				startCountDown(2250, function() {
-					config.inMatch = true;
-					Events.fire("onRoundStart");
-				});
-			// }, config.startGameTime);
-		});
-	}
-	function checkParty(fn) {
-		Events.fire("onPartyCheck");
-		if (partyCheck != null) return false;
-		//check for all special keys
-		partyCheck = function() {
-			var sum = 0;
-			for (var i = 0; i < config.player.length; i++) {
-				sum += (config.player[i].specialIntent) ? 1 : 0;
-			}
-			if (sum >= config.player.length) {
-				partyCheck = null;
-				Events.fire("onPartyReady");
-				if (typeof fn === "function") fn.call();
-			}
-		};
-	}
-	function startCountDown(time, fn) {
-		var count = 0;
-		var a = setInterval(function() {
-			count += time / 3;
-		}, time / 3);
-		setTimeout(function() {
-			clearInterval(a);
-			fn.call();
-		}, time + 1);
-	}
+	
+	
+	
 	function gameLoop() {
 		window.requestAnimationFrame(gameLoop);
 		var now = Date.now();
@@ -267,7 +226,6 @@
 			}
 			needDeactivation = [];
 		}
-		if (!config.inMatch && partyCheck != null) partyCheck.call(null, deltaTime);
 	}
 	/**
 	 *
@@ -276,20 +234,7 @@
 	function killPlayer(player) {
 		player.dead = true;
 		//update match score
-		var deadCount = 0;
-		for (var i = 0; i < config.player.length; i++) {
-			if (!config.player[i].dead) {
-				config.player[i].points += 1;
-			} else {
-				deadCount++;
-			}
-		}
 		Events.fire("onPlayerDied", player);
-		if (deadCount >= config.player.length - 1) {
-			config.inMatch = false;
-			Events.fire("onRoundEnd");
-			startRound();
-		}
 	}
 	/**
 	 * @param {Player} player

@@ -23,7 +23,7 @@
 		}
 		onPartyCheck() {
 			//show text  "Press Special Key"
-			this.msg = new CanvasText.Text("Press Special Key", 30, this.overlayCtx, this.textPosCenter, 0);
+			this.msg = new CanvasText.Text("Hold Special Key", 30, this.overlayCtx, this.textPosCenter, 0);
 			this.msg.setActive();
 			var a = new CanvasText.animations.Pulsate(5);
 			a.attach(this.msg);
